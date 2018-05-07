@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Installing yarn
+      - curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+      - echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+      - apt-get update
+      - apt-get install -y yarn
+      - yarn --version
+  pre_build:
+    commands:
+      - echo Installing source NPM dependencies...
+      - yarn install
+      - echo Testing CI
+      - export CI=true 
+      - yarn test
+  build:
+    commands:
+      - echo Build started on `date`
+      - yarn build
+  post_build:
+    commands:
+      - aws s3 sync build/ s3://${BUCKET_NAME}
+      - echo Build completed on `date`
